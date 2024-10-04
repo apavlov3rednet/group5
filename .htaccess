@@ -1,0 +1,26 @@
+Options -Indexes
+ErrorDocument 404 /404.php
+
+<IfModule mod_rewrite.c>
+    # Options +FollowSymLinks
+    # RewriteEngine On
+    # RewriteCond %{REQUEST_FILENAME} !/core/urlrewrite.php$
+    # RewriteRule ^(.*)$ /core/urlrewrite.php [L]
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_flag session.use_trans_sid off
+</IfModule>
+
+<IfModule mod_dir.c>
+    DirectoryIndex index.php index.html
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 3 day"
+    ExpiresByType image/gif "access plus 3 day"
+    ExpiresByType image/png "access plus 3 day"
+    ExpiresByType text/css "access plus 3 day"
+    ExpiresByType application/javascript "access plus 3 day"
+</IfModule>
