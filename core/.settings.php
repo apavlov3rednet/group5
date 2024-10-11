@@ -3,8 +3,14 @@ return [
     'connections' => [
         'value' => [
             'default' => [
-                'host' => '',
-                'database' => '',
+                'host' => 'MySQL-8.0',
+                'database' => 'groupfive',
+                'login' => 'root',
+                'password' => ''
+            ],
+            'localhost' => [
+                'host' => 'MongoDB',
+                'database' => 'groupfive',
                 'login' => 'root',
                 'password' => ''
             ]
