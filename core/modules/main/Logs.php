@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Main;
+namespace Main;
 
 use DateTime;
 

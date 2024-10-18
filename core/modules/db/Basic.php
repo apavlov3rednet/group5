@@ -1,8 +1,8 @@
 <?php
 
-namespace Core\Db;
+namespace Db;
 
-use Core\Main\Settings;
+use Main\Settings;
 use PDO;
 use PDOException;
 
@@ -13,13 +13,18 @@ class Basic
     private $dbPassword;
     private $dbHost;
     private $conn;
+    private $settings;
+    private $database;
 
     public function __construct(string $dbName = 'default') {
+        $this->settings = new Settings();
+        $arSettings = $this->settings->getDbParams($dbName);
+
         $this->dbName = $dbName;
-        $arSettings = Settings::getDbParams($dbName);
         $this->dbHost = $arSettings['host'];
         $this->dbUser = $arSettings['login'];
         $this->dbPassword = $arSettings['password'];
+        $this->database = $arSettings['database'];
 
         $this->connect();
     }
@@ -28,7 +33,7 @@ class Basic
     {
         try {
             $this->conn = new PDO(
-                "mysql:host=$this->dbHost;dbname=$this->dbName", 
+                "mysql:host=$this->dbHost;dbname=$this->database", 
                 $this->dbUser, 
                 $this->dbPassword
             );
@@ -36,10 +41,24 @@ class Basic
             return true;
         }   
         catch(PDOException $e) {
-            \Core\Main\Logs::add2Log($e->getMessage(), 'message');
+            \Main\Logs::add2Log($e->getMessage(), 'message');
             $this->conn = false;
             return false;
         }     
+    }
+
+    private function prepareFilter($arFilter, &$sql, &$filter, &$execute): void   
+    {
+        if(!empty($arFilter)) {
+            foreach($arFilter as $key => $value) {
+                $filter[] = $key . ' = ?';
+                $execute[] = $value;
+            }
+        }
+
+        if(!empty($filter)) {
+            $sql .= ' WHERE '. join(', ', $filter);
+        }
     }
 
     /**
@@ -71,21 +90,13 @@ class Basic
 
         //Основная выборка из таблицы
         $sql = 'SELECT ';
-        $select = join(', ', $params['select']) ?? '*';
+        $select = (!empty($params['select'])) ? join(', ', $params['select']) : '*';
         $sql .= $select . ' FROM ' . $table;
 
         //Фильтр
-        if(is_array($params['filter']) && !empty($params['filter'])) {
-            foreach($params['filter'] as $key => $value) {
-                $filter[] = $key . ' = ?';
-                $execute[] = $value;
-            }
-        }
-
-        if(!empty($filter)) {
-            $sql .= ' WHERE '. join(', ', $filter);
-        }
-
+        if(!empty($params['filter']))
+            $this->prepareFilter($params['filter'], $sql, $filter, $execute);
+        
         //Сортировка
         if(!empty($params['order'])) {
             $key = array_key_first($params['order']);
@@ -94,8 +105,8 @@ class Basic
 
         //Применение лимитов и стартовой позиции выборки
         if(!empty($params['limit'])) {
-            $limit = $params['limit']['rows'] > 0 ? $params['limit']['rows'] : $limit;
-            $offset = $params['limit']['offset'] > 0? $params['limit']['offset'] : $offset;
+            $limit = (!empty($params['limit']['rows'])) ? $params['limit']['rows'] : $limit;
+            $offset = (!empty($params['limit']['offset'])) ? $params['limit']['offset'] : $offset;
 
             $sql .= ' LIMIT ' . $limit;
             $sql .= ' OFFSET ' . $offset;
@@ -112,11 +123,48 @@ class Basic
             }
         }
         catch(PDOException $e) {
-            \Core\Main\Logs::add2Log($e->getMessage());
+            \Main\Logs::add2Log('List: ' .$e->getMessage());
         }
         
 
         return $result;
     }
 
+    /**
+     * Summary of add
+     * @param string $table
+     * @param array $arFields = [
+     *  'KEY' => 'VALUE',
+     *  'KEY2' => 'VALUE2', ....
+     * ]
+     * @return mixed
+     */
+    public function add(string $table, array $arFields)
+    {
+        try {
+            //INSERT INTO `users` (`ID`, `LOGIN`, `PASSWORD`) VALUES (:ID, :LOGIN, :PASSWORD)
+            $fields = join(', ', array_keys($arFields)); //ID, LOGIN, PASSWORD
+            $prepValues = ':' . join(', :', array_keys($arFields)); // :ID, :LOGIN, :PASSWORD
+
+            $sql = 'INSERT INTO ' . $table . '(' . $fields . ') VALUES ('. $prepValues .')';
+            //INSERT INTO `users` (`ID`, `LOGIN`, `PASSWORD`) VALUES (:ID, :LOGIN, :PASSWORD)
+
+            $request = $this->conn->prepare($sql);
+
+            foreach($arFields as $key => $value) {
+                $request->bindValue(':' . $key, $value);
+            }
+
+            if($request->execute()) {
+                return $this->conn->lastInsertId('ID');
+            }
+            else {
+                \Main\Logs::add2Log('Add fail: ' . $e->getMessage());
+                return false;
+            }
+        }
+        catch(PDOException $e) {
+            \Main\Logs::add2Log('Add: ' . $e->getMessage());
+        }
+    }
 }
