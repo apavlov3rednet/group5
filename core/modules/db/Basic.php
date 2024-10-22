@@ -159,12 +159,76 @@ class Basic
                 return $this->conn->lastInsertId('ID');
             }
             else {
-                \Main\Logs::add2Log('Add fail: ' . $e->getMessage());
+                \Main\Logs::add2Log('Add fail');
                 return false;
             }
         }
         catch(PDOException $e) {
             \Main\Logs::add2Log('Add: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function delete(string $table, array $where) {
+        try {
+            $filter = [];
+            $execute = [];
+            $sql = 'DELETE FROM ' . $table;
+            $this->prepareFilter($where, $sql, $filter, $execute);
+            //DELETE FROM table WHERE value = ?
+
+            $request = $this->conn->prepare($sql);
+            if($request->execute($execute)) {
+                return true;
+            }
+            else {
+                \Main\Logs::add2Log('Error delete');
+                return false;
+            }
+        }
+        catch(PDOException $e) {
+            \Main\Logs::add2Log('Deelte: '. $e->getMessage());
+            return false;
+        }
+    }
+
+    public function update(string $table, int $id, array $arFileds) {
+        try{
+            $filter = [];
+            $execute = [];
+            $arSql = [];
+            //UPDATE `users` SET `LOGIN` = :LOGIN, `PASSWORD` = :PASSWORD WHERE `users`.`ID` = ?;
+
+            $sql = 'UPDATE ' . $table . ' SET ';
+            foreach( $arFileds as $key => $value ) {
+                $arSql[] = $key . ' = :' . $key; //LOGIN = :LOGIN
+            }
+
+            if(!empty($arSql)) {
+                $sql .= join(', ', $arSql); //LOGIN = :LOGIN, PASSWORD = :PASSWORD
+                //UPDATE `users` SET `LOGIN` = :LOGIN, `PASSWORD` = :PASSWORD
+            }
+
+            $this->prepareFilter(['ID' => $id], $sql, $filter, $execute);
+            //UPDATE `users` SET `LOGIN` = :LOGIN, `PASSWORD` = :PASSWORD WHERE `users`.`ID` = ?;
+
+            $request = $this->conn->prepare($sql);
+
+            foreach($arFileds as $key => $value ) {
+                $request->bindValue(':'.$key, $value);
+            }
+
+            if( $request->execute($execute) ) {
+                return true;
+            }
+            else {
+                \Main\Logs::add2Log('error update');
+                return false;
+            }
+        }
+        catch(PDOException $e) {
+            \Main\Logs::add2Log('update : '. $e->getMessage());
+            return false;
         }
     }
 }

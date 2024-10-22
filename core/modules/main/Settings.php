@@ -9,7 +9,7 @@ final class Settings
 
     public function __construct() {
         if(file_exists($_SERVER['DOCUMENT_ROOT'] . '/core/.settings.php')) {
-            $this->arSettings = require_once($_SERVER['DOCUMENT_ROOT'] . '/core/.settings.php');
+            $this->arSettings = require($_SERVER['DOCUMENT_ROOT'] . '/core/.settings.php');
             //include, include_once, require, require_once - подключение файла
             //$this->arSettings;
         }
