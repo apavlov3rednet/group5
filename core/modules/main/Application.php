@@ -6,6 +6,11 @@ class Application {
     public function __construct() {
     }
 
+    static public function getCurPage(): string
+    {
+        return $_SERVER['REQUEST_URI'];
+    }
+
     /**
      * Summary of includeComponent
      * @param string $name - exmpl, news.list
@@ -15,7 +20,10 @@ class Application {
      * ]
      * @return void
      */
-    static public function includeComponent(string $name, string $template, array $parameters) {
+    static public function includeComponent(string $name, string $template, array $parameters = []):void 
+    {
+        $arResult = [];
+
         $componentPath = $_SERVER['DOCUMENT_ROOT'] . '/core/components/' . $name . '/';
 
         if($template == '') $template = 'default';
@@ -32,18 +40,12 @@ class Application {
             $arParams = require $templatePath . '/.parameters.php';
         }
 
-        //Подключение мутатора результата
-        if(file_exists($templatePath . '/result_modifer.php')) {
-            require $templatePath . '/result_modifer.php';
-        }
-
-        //Подключение стилей и скриптов по умолчанию
-        Asset::addExternalCss($templatePath . '/style.css');
-        Asset::addExternalJs($templatePath . '/script.js');
-
         //Старт работы компонента
         if(file_exists($componentPath . '/component.php')) {
             require $componentPath . '/component.php';
         }
+
+        //Удаляем переменные после завершения работы компонента. Высвобождаем память сервера
+        unset($arResult, $arParams, $templatePath, $componentPath);
     }
 }

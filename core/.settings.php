@@ -31,6 +31,7 @@ return [
     ],
     'cache_flags' => [
         'value' => [
+            'cache_path' => $_SERVER['DOCUMENT_ROOT'] . '/core/cache/',
             'config_options' => 3600,
             'site_domain' => 3600
         ],
