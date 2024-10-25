@@ -39,6 +39,7 @@ class Application {
         if(file_exists($templatePath . '/.parameters.php')) {
             $arParams = require $templatePath . '/.parameters.php';
         }
+        $arParams = array_merge($arParams, $parameters);
 
         //Старт работы компонента
         if(file_exists($componentPath . '/component.php')) {

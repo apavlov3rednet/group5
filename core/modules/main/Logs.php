@@ -12,11 +12,8 @@ final class Logs
     static public function add2Log(mixed $log, string $type = 'error'): void 
     {
         //fopen, fwrite, fclose
-        $date = new DateTime('d.m.Y H:i:s');
-        $dateFormat = new String($date);
         $log = '----------\n\r';
         $log .= 'type: ' . $type . '\n\r';
-        $log .= 'date: ' . $dateFormat . '\n\r';
         $log .= print($log);
 
         file_put_contents(CONST_LOG_FILE, $log);

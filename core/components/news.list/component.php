@@ -22,19 +22,24 @@ Asset::addExternalJs($templatePath . '/script.js');
 $settings = new Settings();
 $cache = $settings->getCacheParams();
 
-$arParams['CACHE_TIME'] = ($arParams['CACHE_TIME']) ? $arParams['CACHE_TIME'] : $cache['value']['config_options'];
-$arParams['TABLE_NAME'] = ($arParams['TABLE_NAME']) ? $arParams['TABLE_NAME'] : null;
+$arParams['CACHE_TIME'] = (isset($arParams['CACHE_TIME'])) ? $arParams['CACHE_TIME'] : $cache['value']['config_options'];
+$arParams['TABLE_NAME'] = (isset($arParams['TABLE_NAME'])) ? $arParams['TABLE_NAME'] : null;
 
 if(!$arParams['TABLE_NAME']) {
    // throw new Exception('Не указано имя таблицы');
 }
 
-$arParams['COUNT_ELEMENT'] = ($arParams['COUNT_ELEMENT']) ? $arParams['COUNT_ELEMENT'] : 10;
-$arParams['QUERY'] = ($arParams['QUERY']) ? $arParams['QUERY'] : [];
+$arParams['COUNT_ELEMENT'] = (isset($arParams['COUNT_ELEMENT'])) ? $arParams['COUNT_ELEMENT'] : 10;
+$arParams['QUERY'] = (isset($arParams['QUERY'])) ? $arParams['QUERY'] : [];
 
 //Текущая страница и стартовая позиция запроса к бд
-$startPosition = (int)$_GET['page'] * $arParams['COUNT_ELEMENT'] + 1 - $arParams['COUNT_ELEMENT'];
-$offset = ((int)$_GET['page'] > 1) ? $startPosition : 1;
+if(isset($_GET['page'])) {
+    $offset =(int)$_GET['page'] * $arParams['COUNT_ELEMENT'] + 1 - $arParams['COUNT_ELEMENT'];
+}
+else {
+    $offset = 1;
+}
+
 
 $curPage = Application::getCurPage() . $templatePath;
 
